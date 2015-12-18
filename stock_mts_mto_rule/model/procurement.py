@@ -19,11 +19,13 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
-from openerp import models, api
+from openerp import models, api, fields
 
 
 class ProcurementOrder(models.Model):
     _inherit = 'procurement.order'
+
+    is_mts_mto = fields.Boolean('Is mto-mts procurement?')
 
     @api.multi
     def get_mto_qty_to_order(self):
@@ -107,5 +109,27 @@ class ProcurementOrder(models.Model):
                     uos_qty - mts_uos_qty)
 
                 mto_proc = procurement.copy(mto_vals)
+                mto_proc.write({'is_mts_mto': True})
                 mto_proc.run()
         return super(ProcurementOrder, self)._run(procurement)
+
+
+class StockMove(models.Model):
+
+    _inherit = 'stock.move'
+
+    @api.multi
+    def action_cancel(self):
+        """
+            Overwrite this method because when cancel
+            move of MO/PO created by mts-mto rule
+            also cancel all move related to SO(eg, pick, pack, out)
+        """
+
+        for move in self:
+            if move.move_dest_id and move.propagate:
+                if move.move_dest_id.procurement_id.is_mts_mto:
+                    # move_dest_id is set false to avoid cancel another picking
+                    move.move_dest_id.write({'move_dest_id': False})
+
+        return super(StockMove, self).action_cancel()
