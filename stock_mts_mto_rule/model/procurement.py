@@ -25,8 +25,6 @@ from openerp import models, api, fields
 class ProcurementOrder(models.Model):
     _inherit = 'procurement.order'
 
-    is_mts_mto = fields.Boolean('Is mto-mts procurement?')
-
     @api.multi
     def get_mto_qty_to_order(self):
         self.ensure_one()
@@ -109,7 +107,6 @@ class ProcurementOrder(models.Model):
                     uos_qty - mts_uos_qty)
 
                 mto_proc = procurement.copy(mto_vals)
-                mto_proc.write({'is_mts_mto': True})
                 mto_proc.run()
         return super(ProcurementOrder, self)._run(procurement)
 
@@ -128,8 +125,15 @@ class StockMove(models.Model):
 
         for move in self:
             if move.move_dest_id and move.propagate:
-                if move.move_dest_id.procurement_id.is_mts_mto:
-                    # move_dest_id is set false to avoid cancel another picking
-                    move.move_dest_id.write({'move_dest_id': False})
+                for move_origin in move.move_orig_ids:
+                    if move_origin.procurement_id.rule_id.action in (
+                            'buy', 'manufacture'):
+                        for procurement in move_origin.procurement_id.\
+                                group_id.procurement_ids:
+                            if procurement.rule_id.action == 'split_procurement' and\
+                                    procurement.product_id == move.product_id:
+                                # move_dest_id is set false to avoid cancel
+                                # another picking
+                                move.write({'move_dest_id': False})
 
         return super(StockMove, self).action_cancel()
