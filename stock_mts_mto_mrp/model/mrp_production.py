@@ -32,12 +32,15 @@ class MrpProduction(models.Model):
             if pull.procure_method == 'make_to_order':
                 move.procure_method = pull.procure_method
             elif not pull and mto_route & routes:  # If there is no make_to_stock rule either # noqa
-                import pdb;pdb.set_trace()
-                origin = (move.group_id and move.group_id.name or (
-                    move.rule_id and move.rule_id.name or move.origin or
-                    move.picking_id.name or "/"))
-                values = move._prepare_procurement_values()
-                self.env['procurement.group'].run(
-                    move.product_id, move.product_uom_qty, move.product_uom,
-                    move.location_id, move.rule_id and move.rule_id.name or
-                    "/", origin, values)
+                move.procure_method = 'make_to_order'
+
+            # elif not pull and mto_route & routes:  # If there is no make_to_stock rule either # noqa
+            #     import pdb;pdb.set_trace()
+            #     origin = (move.group_id and move.group_id.name or (
+            #         move.rule_id and move.rule_id.name or move.origin or
+            #         move.picking_id.name or "/"))
+            #     values = move._prepare_procurement_values()
+            #     self.env['procurement.group'].run(
+            #         move.product_id, move.product_uom_qty, move.product_uom,
+            #         move.location_id, move.rule_id and move.rule_id.name or
+            #         "/", origin, values)
