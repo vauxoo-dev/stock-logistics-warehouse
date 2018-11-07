@@ -1,0 +1,16 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<odoo>
+    <record id="trigger_edit_sale_order_line" model="base.automation">
+        <field name="name">If there is MTS+MTO route we will not order everything in existence</field>
+        <field name="model_id" ref="purchase.model_purchase_order_line"/>
+        <field name="trigger">on_create</field>
+        <field name="active" eval="True"/>
+        <field name="state">code</field>
+        <field name="code">
+if 'Make To Order + Make To Stock' in record.product_id.route_ids.mapped('name'):
+    if record.product_qty > record.product_id.qty_available:
+        to_order_for_real = record.product_qty - record.product_id.qty_available
+        record.write({'product_qty': to_order_for_real})
+        </field>
+    </record>
+</odoo>

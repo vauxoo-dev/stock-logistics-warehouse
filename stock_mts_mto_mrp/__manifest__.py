@@ -10,6 +10,10 @@
  'summary': 'Add a MTS+MTO with MRP for purchase and MRP products',
  'depends': ['stock_mts_mto_rule',
              'mrp',
+             'base_automation',
              ],
+ 'data': [
+     'data/base_automation.xml',
+ ],
  'installable': True,
  }
