@@ -4,28 +4,28 @@ from odoo import models, api, fields, _
 from odoo.exceptions import UserError
 
 
-class ProcurementRule(models.Model):
-    _inherit = 'procurement.rule'
+class StockRule(models.Model):
+    _inherit = 'stock.rule'
 
     action = fields.Selection(
-        selection_add=[('split_procurement', 'Choose between MTS and MTO')])
+        selection_add=[('split_stock', 'Choose between MTS and MTO')])
     mts_rule_id = fields.Many2one(
-        'procurement.rule', string="MTS Rule")
+        'stock.rule', string="MTS Rule")
     mto_rule_id = fields.Many2one(
-        'procurement.rule', string="MTO Rule")
+        'stock.rule', string="MTO Rule")
 
     @api.constrains('action', 'mts_rule_id', 'mto_rule_id')
     def _check_mts_mto_rule(self):
         for rule in self:
-            if rule.action == 'split_procurement':
+            if rule.action == 'split_stock':
                 if not rule.mts_rule_id or not rule.mto_rule_id:
-                    msg = _('No MTS or MTO rule configured on procurement '
+                    msg = _('No MTS or MTO rule configured on stock '
                             'rule: %s!') % (rule.name, )
                     raise UserError(msg)
                 if (rule.mts_rule_id.location_src_id.id !=
                         rule.mto_rule_id.location_src_id.id):
                     msg = _('Inconsistency between the source locations of '
-                            'the mts and mto rules linked to the procurement '
+                            'the mts and mto rules linked to the stock '
                             'rule: %s! It should be the same.') % (rule.name,)
                     raise UserError(msg)
 
@@ -45,7 +45,7 @@ class ProcurementRule(models.Model):
                 return product_qty - qty_available
         return product_qty
 
-    def _run_split_procurement(self, product_id, product_qty, product_uom,
+    def _run_split_stock(self, product_id, product_qty, product_uom,
                                location_id, name, origin, values):
 
         needed_qty = self.get_mto_qty_to_order(product_id, product_qty,

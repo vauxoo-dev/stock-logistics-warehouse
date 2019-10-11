@@ -12,14 +12,14 @@ class StockWarehouse(models.Model):
         help='If this new route is selected on product form view, a '
              'purchase order will be created only if the virtual stock is '
              'less than 0 else, the product will be taken from stocks')
-    mts_mto_rule_id = fields.Many2one('procurement.rule',
+    mts_mto_rule_id = fields.Many2one('stock.rule',
                                       'MTO+MTS rule')
 
     @api.multi
     def _get_mts_mto_rule(self):
         self.ensure_one()
         route_model = self.env['stock.location.route']
-        pull_model = self.env['procurement.rule']
+        pull_model = self.env['stock.rule']
         try:
             mts_mto_route = self.env.ref(
                 'stock_mts_mto_rule.route_mto_mts')
@@ -44,7 +44,7 @@ class StockWarehouse(models.Model):
         return {
             'name': self._format_routename(route_type='mts_mto'),
             'route_id': mts_mto_route.id,
-            'action': 'split_procurement',
+            'action': 'split_stock',
             'mto_rule_id': self.mto_pull_id.id,
             'mts_rule_id': mts_rules[0].id,
             'warehouse_id': self.id,
@@ -65,7 +65,7 @@ class StockWarehouse(models.Model):
 
     @api.multi
     def create_routes(self):
-        pull_model = self.env['procurement.rule']
+        pull_model = self.env['stock.rule']
         res = super(StockWarehouse, self).create_routes()
         if self.mto_mts_management:
             mts_mto_pull_vals = self._get_mts_mto_rule()
@@ -75,7 +75,7 @@ class StockWarehouse(models.Model):
 
     @api.multi
     def write(self, vals):
-        pull_model = self.env['procurement.rule']
+        pull_model = self.env['stock.rule']
         if 'mto_mts_management' in vals:
             if vals.get("mto_mts_management"):
                 for warehouse in self:
@@ -127,7 +127,7 @@ class StockWarehouse(models.Model):
         for warehouse in self:
             mts_mto_rule_id = warehouse.mts_mto_rule_id
             if warehouse.delivery_steps and mts_mto_rule_id:
-                pull_model = self.env['procurement.rule']
+                pull_model = self.env['stock.rule']
                 warehouse.mts_mto_rule_id.location_id = \
                     warehouse.mto_pull_id.location_id
                 mts_rules = pull_model.search([
